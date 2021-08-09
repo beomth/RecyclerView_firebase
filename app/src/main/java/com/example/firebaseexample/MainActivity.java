@@ -7,6 +7,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -24,11 +28,19 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<User> arrayList;
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
+    private EditText id, pw, name, profile;
+    private Button btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        id = findViewById(R.id.id);
+        pw = findViewById(R.id.pw);
+        name = findViewById(R.id.name);
+        profile = findViewById(R.id.profile);
+        btn = findViewById(R.id.btn);
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true); // 리사이클러뷰 기존성능강화
@@ -38,17 +50,15 @@ public class MainActivity extends AppCompatActivity {
 
         database = FirebaseDatabase.getInstance(); // 파이어베이스 데이터베이스 연동
 
-        databaseReference = database.getReference("User"); //데이터베이서 네임 테이블
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference = database.getReference(); //데이터베이서 네임 테이블
+        databaseReference.child("User").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 //파이어베이스 데이터베이스의 데이터를 받아오는 곳
-                arrayList.clear(); // 유저객체를 담았던 어레이 리스트, 기존 배열리스트가 존재하지 않게 초기화
+//                arrayList.clear(); // 유저객체를 담았던 어레이 리스트, 기존 배열리스트가 존재하지 않게 초기화
                 for(DataSnapshot dataSnapshot: snapshot.getChildren()){ // 반복문으로 데이터 리스트를 추출해냄
                     User user = dataSnapshot.getValue(User.class); //만들어뒀던 User 객체에 데이터를 담는다
                     arrayList.add(user); // 담은 데이터들을 배열리스트에 넣고 리사이클러뷰로 보낼 준비
-
-
                 }
                 adapter.notifyDataSetChanged(); // 리스트 저장 및 새로고침
             }
@@ -62,5 +72,20 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new CustomAdapter(arrayList, this); // 생성자로부터 값을 받음
         recyclerView.setAdapter(adapter); // 리사이클러뷰에 어댑터 연결
+
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                User user = new User();
+                user.setId(id.getText().toString());
+                user.setPw(pw.getText().toString());
+                user.setUserName(name.getText().toString());
+                user.setProfile(profile.getText().toString());
+
+                databaseReference.child("User").push().setValue(user);
+
+            }
+        });
     }
 }
